@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NutriLog</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4CAF50;
+      --accent: #FFD866;
+      --bg-gradient: linear-gradient(135deg, #4be3b7 0%, #a8f7e2 35%, #2b5c4d 100%);
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-gradient);
+      color: #222;
+      padding: 24px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 2em;
+      font-weight: 600;
+      margin-bottom: 30px;
+      color: #222;
+    }
+
+    .tab-button {
+      display: block;
+      width: 100%;
+      max-width: 400px;
+      padding: 14px 24px;
+      margin: 10px auto;
+      background-color: #285b4c;
+      color: #6df2ac;
+      font-weight: 600;
+      border: none;
+      border-radius: 999px;
+      box-shadow: 0 6px 0 #00000066;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-button.active {
+      background-color: #45a084;
+      color: black;
+    }
+
+    .tab-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 10px rgba(0,0,0,0.2);
+    }
+
+    .tab-content {
+      display: none;
+      width: 100%;
+      max-width: 500px;
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-top: 30px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    input, select, button {
+      font-size: 1em;
+      width: 100%;
+      padding: 12px;
+      margin-top: 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #193a30;
+    }
+
+    .meal {
+      margin: 10px 0;
+      padding: 10px;
+      background: #f2f2f2;
+      border-radius: 8px;
+    }
+
+    input[type="date"] {
+      background: #fefefe;
+    }
+  </style>
+</head>
+<body>
+  <h1><em>NutriLog</em></h1>
+
+  <!-- Tab Buttons -->
+  <button class="tab-button active" onclick="switchTab('setupTab')">Setup</button>
+  <button class="tab-button" onclick="switchTab('addMealTab')">Add meal</button>
+  <button class="tab-button" onclick="switchTab('summaryTab')">Summary & Calendar</button>
+
+  <!-- Setup Tab -->
+  <div id="setupTab" class="tab-content active">
+    <input id="weight" placeholder="Body weight (kg)" type="number" oninput="updateProteinGoal()" />
+    <input id="bmr" placeholder="BMR (calories)" type="number" />
+    <input id="proteinPerKg" placeholder="Protein per day (g/kg)" type="number" step="0.01" oninput="updateProteinGoal()" />
+    <div id="proteinGoalDisplay" style="margin-bottom: 12px; font-weight: 600;"></div>
+    <button class="tab-button" onclick="saveSetup()">Save Setup</button>
+  </div>
+
+  <!-- Add Meal Tab -->
+  <div id="addMealTab" class="tab-content">
+    <input id="food" placeholder="Food name"/>
+    <input id="amount" placeholder="Amount (e.g. 100g, 1 tbsp)"/>
+    <input id="calories" placeholder="Calories" type="number"/>
+    <input id="protein" placeholder="Protein (g)" type="number"/>
+    <button class="tab-button" onclick="addMeal()">Add to Diary</button>
+  </div>
+
+  <!-- Summary Tab -->
+  <div id="summaryTab" class="tab-content">
+    <input type="date" id="diaryDate" onchange="updateSummary()" />
+    <div id="summary" style="margin-top:10px;"></div>
+    <div id="mealList" style="margin-top:10px;"></div>
+  </div>
+
+  <script>
+    const setupKey = "diet-setup";
+    const diaryKey = "diet-diary";
+
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+      event.target.classList.add('active');
+      if (tabId === 'summaryTab') updateSummary();
+    }
+
+    function getSelectedDate() {
+      return document.getElementById("diaryDate").value || new Date().toISOString().split("T")[0];
+    }
+
+    function saveSetup() {
+      const setup = {
+        weight: +document.getElementById("weight").value,
+        bmr: +document.getElementById("bmr").value,
+        proteinPerKg: +document.getElementById("proteinPerKg").value,
+      };
+      localStorage.setItem(setupKey, JSON.stringify(setup));
+      alert("Setup saved!");
+    }
+
+    function loadSetup() {
+      const setup = JSON.parse(localStorage.getItem(setupKey));
+      if (!setup) return;
+      if (setup.weight !== undefined) document.getElementById("weight").value = setup.weight;
+      if (setup.bmr !== undefined) document.getElementById("bmr").value = setup.bmr;
+      if (setup.proteinPerKg !== undefined) document.getElementById("proteinPerKg").value = setup.proteinPerKg;
+      updateProteinGoal();
+    }
+
+    function updateProteinGoal() {
+      const weight = +document.getElementById("weight").value;
+      const proteinPerKg = +document.getElementById("proteinPerKg").value;
+      if (weight && proteinPerKg) {
+        document.getElementById("proteinGoalDisplay").textContent = `Protein goal: ${(weight * proteinPerKg).toFixed(1)} g per day`;
+      } else {
+        document.getElementById("proteinGoalDisplay").textContent = '';
+      }
+    }
+
+    function addMeal() {
+      const meal = {
+        food: document.getElementById("food").value,
+        amount: document.getElementById("amount").value,
+        calories: +document.getElementById("calories").value,
+        protein: +document.getElementById("protein").value,
+      };
+      const diary = JSON.parse(localStorage.getItem(diaryKey) || "{}");
+      const date = getSelectedDate();
+      if (!diary[date]) diary[date] = [];
+      diary[date].push(meal);
+      localStorage.setItem(diaryKey, JSON.stringify(diary));
+      updateSummary();
+    }
+
+    function calculateBMR(setup) {
+      const { age, weight, height, gender } = setup;
+      if (!age || !weight || !height || !gender) return 0;
+      return gender === "male"
+        ? 10 * weight + 6.25 * height - 5 * age + 5
+        : 10 * weight + 6.25 * height - 5 * age - 161;
+    }
+
+    function updateSummary() {
+      const setup = JSON.parse(localStorage.getItem(setupKey));
+      const diary = JSON.parse(localStorage.getItem(diaryKey) || "{}");
+      const date = getSelectedDate();
+      const meals = diary[date] || [];
+      const totalCalories = meals.reduce((sum, m) => sum + m.calories, 0);
+      const totalProtein = meals.reduce((sum, m) => sum + m.protein, 0);
+      const BMR = setup ? calculateBMR(setup) : 0;
+      const proteinGoal = setup ? setup.proteinPerKg * setup.weight : 0;
+
+      document.getElementById("summary").innerHTML = `
+        <b>Date:</b> ${date}<br/>
+        BMR: <b>${BMR.toFixed(0)}</b> kcal<br/>
+        Protein goal: <b>${proteinGoal.toFixed(1)}</b> g<br/><br/>
+        Calories eaten: <b>${totalCalories}</b><br/>
+        Calorie balance: <b>${(totalCalories - BMR).toFixed(0)}</b> kcal<br/>
+        Protein eaten: <b>${totalProtein}</b> g<br/>
+        Protein difference: <b>${(totalProtein - proteinGoal).toFixed(1)}</b> g
+      `;
+
+      document.getElementById("mealList").innerHTML = meals.map(m => `
+        <div class="meal">🍽️ <b>${m.food}</b> – ${m.amount}, ${m.calories} kcal, ${m.protein}g protein</div>
+      `).join("");
+    }
+
+    window.onload = () => {
+      loadSetup();
+      const today = new Date().toISOString().split("T")[0];
+      document.getElementById("diaryDate").value = today;
+      updateSummary();
+    };
+  </script>
+</body>
+</html>
