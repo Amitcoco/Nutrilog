@@ -117,17 +117,10 @@
 
   <!-- Setup Tab -->
   <div id="setupTab" class="tab-content active">
-    <input id="age" placeholder="Age" type="number"/>
-    <input id="height" placeholder="Height (cm)" type="number"/>
-    <input id="weight" placeholder="Weight (kg)" type="number"/>
-    <select id="gender">
-      <option value="">Gender</option>
-      <option value="male">Male</option>
-      <option value="female">Female</option>
-    </select>
-    <input id="exercise" placeholder="Exercise days/week" type="number"/>
-    <input id="intensity" placeholder="Exercise intensity (1–3)" type="number" min="1" max="3"/>
-    <input id="proteinPerKg" placeholder="Protein goal (g/kg)" type="number" step="0.1"/>
+    <input id="weight" placeholder="Body weight (kg)" type="number" oninput="updateProteinGoal()" />
+    <input id="bmr" placeholder="BMR (calories)" type="number" />
+    <input id="proteinPerKg" placeholder="Protein per day (g/kg)" type="number" step="0.01" oninput="updateProteinGoal()" />
+    <div id="proteinGoalDisplay" style="margin-bottom: 12px; font-weight: 600;"></div>
     <button class="tab-button" onclick="saveSetup()">Save Setup</button>
   </div>
 
@@ -165,12 +158,8 @@
 
     function saveSetup() {
       const setup = {
-        age: +document.getElementById("age").value,
-        height: +document.getElementById("height").value,
         weight: +document.getElementById("weight").value,
-        gender: document.getElementById("gender").value,
-        exercise: +document.getElementById("exercise").value,
-        intensity: +document.getElementById("intensity").value,
+        bmr: +document.getElementById("bmr").value,
         proteinPerKg: +document.getElementById("proteinPerKg").value,
       };
       localStorage.setItem(setupKey, JSON.stringify(setup));
@@ -180,9 +169,19 @@
     function loadSetup() {
       const setup = JSON.parse(localStorage.getItem(setupKey));
       if (!setup) return;
-      for (const key in setup) {
-        const el = document.getElementById(key);
-        if (el) el.value = setup[key];
+      if (setup.weight !== undefined) document.getElementById("weight").value = setup.weight;
+      if (setup.bmr !== undefined) document.getElementById("bmr").value = setup.bmr;
+      if (setup.proteinPerKg !== undefined) document.getElementById("proteinPerKg").value = setup.proteinPerKg;
+      updateProteinGoal();
+    }
+
+    function updateProteinGoal() {
+      const weight = +document.getElementById("weight").value;
+      const proteinPerKg = +document.getElementById("proteinPerKg").value;
+      if (weight && proteinPerKg) {
+        document.getElementById("proteinGoalDisplay").textContent = `Protein goal: ${(weight * proteinPerKg).toFixed(1)} g per day`;
+      } else {
+        document.getElementById("proteinGoalDisplay").textContent = '';
       }
     }
 
