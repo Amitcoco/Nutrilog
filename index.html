@@ -252,45 +252,24 @@
     }
 
     @media (max-width: 600px) {
-      #mainLayout {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 0;
+      #calendarGrid {
+        font-size: 0.7em;
+        padding: 2vw 0.2vw 2vw 0.2vw;
+        min-width: 0;
+        width: 99vw;
+        max-width: 99vw;
+        margin: 0 0.2cm 0.2cm 0;
+        margin-bottom: 0.7cm !important;
       }
       #setupPopup {
-        width: 90vw !important;
-        max-width: 220px !important;
-        margin: 0 auto 8px auto !important;
-        font-size: 0.95em !important;
-        border: 1.5px solid #b2dfc7 !important;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important;
-        background: #f8fefb !important;
-        border-radius: 10px !important;
-        z-index: 1000;
+        width: 98vw;
+        max-width: 98vw;
       }
-      #calendarGrid {
-        width: 98vw !important;
-        max-width: 99vw !important;
-        min-width: 0 !important;
-        margin: 0 auto 0 auto !important;
-        font-size: 0.9em !important;
+      h1 {
+        margin-top: 0.7cm;
       }
-    }
-
-    /* Optional: Collapsible setup on mobile */
-    @media (max-width: 600px) {
-      #setupPopup.collapsed {
-        height: 32px !important;
-        overflow: hidden !important;
-        min-width: 0 !important;
-        max-width: 220px !important;
-        width: 90vw !important;
-        cursor: pointer;
-      }
-      #setupPopup.collapsed h3:after {
-        content: ' (tap to expand)';
-        font-size: 0.9em;
-        color: #888;
+      #calendarHeader {
+        margin-top: 0.7cm;
       }
     }
 
