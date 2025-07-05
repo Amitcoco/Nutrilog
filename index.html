@@ -1,0 +1,1310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>NutriLog</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4CAF50;
+      --accent: #FFD866;
+      --bg-gradient: linear-gradient(135deg, #4be3b7 0%, #a8f7e2 35%, #2b5c4d 100%);
+    }
+
+    html, body {
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-gradient);
+      color: #222;
+      padding: 0;
+      min-height: 100vh;
+      min-width: 100vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      box-sizing: border-box;
+      overflow-x: hidden;
+      overflow-y: hidden;
+      margin: 0;
+    }
+
+    h1 {
+      margin: 0 0 10px 0;
+    }
+
+    #calendarHeader {
+      margin: 0 0 6px 0 !important;
+    }
+
+    .tab-button {
+      display: block;
+      width: 100%;
+      max-width: 400px;
+      padding: 14px 24px;
+      margin: 10px auto;
+      background-color: #285b4c;
+      color: #6df2ac;
+      font-weight: 600;
+      border: none;
+      border-radius: 999px;
+      box-shadow: 0 6px 0 #00000066;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tab-button.active {
+      background-color: #45a084;
+      color: black;
+    }
+
+    .tab-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 10px rgba(0,0,0,0.2);
+    }
+
+    .tab-content {
+      display: none;
+      width: 100%;
+      max-width: 500px;
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      margin-top: 30px;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    input, select, button {
+      font-size: 1em;
+      width: 100%;
+      padding: 12px;
+      margin-top: 12px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: var(--primary);
+      color: white;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #193a30;
+    }
+
+    .meal {
+      margin: 10px 0;
+      padding: 10px;
+      background: #f2f2f2;
+      border-radius: 8px;
+    }
+
+    input[type="date"] {
+      background: #fefefe;
+    }
+
+    #mainLayout {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      max-width: 100vw;
+      box-sizing: border-box;
+      gap: min(24px, 5vw); /* ~5mm gap, responsive */
+      height: calc(100vh - 120px); /* Adjust 120px if needed for header/title */
+    }
+
+    #calendarGrid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.5vw;
+      width: 100%;
+      max-width: 950px;
+      min-width: 320px;
+      margin: 0 1cm 2.5cm 0 !important; /* 1cm right, 2.5cm bottom margin */
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.10);
+      padding: 1vw 0.5vw 1vw 0.5vw;
+      box-sizing: border-box;
+      align-content: start;
+    }
+
+    .calendar-header-row {
+      display: contents;
+    }
+
+    .calendar-header-cell {
+      font-weight: bold;
+      text-align: center;
+      font-size: 1.1em;
+      padding-bottom: 0.5vw;
+    }
+
+    .calendar-day-cell {
+      min-height: 7vw;
+      min-width: 7vw;
+      max-width: 12vw;
+      background: none;
+      border: 2px solid #b2dfc7;
+      border-radius: 10px;
+      padding: 0.5vw 0.2vw;
+      font-size: 0.95em;
+      text-align: left;
+      position: relative;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: flex-start;
+      word-break: break-word;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .calendar-day-cell:hover {
+      border-color: #45a084;
+    }
+
+    .calendar-day-cell.today {
+      border: 2.5px solid #45a084;
+      font-weight: bold;
+      box-shadow: 0 0 8px #45a08433;
+      background: #eafaf4;
+    }
+
+    .calendar-day-cell .day-number {
+      font-weight: bold;
+      margin-bottom: 0.2vw;
+    }
+
+    .calendar-day-cell .cal-deficit {
+      font-size: 0.93em;
+      margin-bottom: 0.1vw;
+    }
+
+    .calendar-day-cell .prot-deficit {
+      font-size: 0.93em;
+    }
+
+    #setupPopup {
+      position: static;
+      margin-left: 32px;
+      margin-top: 0;
+      margin-bottom: 0;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      padding: 8px 10px;
+      min-width: 120px;
+      z-index: 1000;
+      font-size: 0.85em;
+      width: 150px;
+      height: fit-content;
+      align-self: flex-start;
+    }
+
+    @media (max-width: 900px) {
+      #mainLayout {
+        flex-direction: column;
+        align-items: center;
+        height: auto;
+        gap: 0;
+      }
+      #setupPopup {
+        margin-left: 0;
+        margin-bottom: 16px;
+        width: 90vw;
+        max-width: 350px;
+      }
+      #calendarGrid {
+        font-size: 0.85em;
+        padding: 2vw 0.5vw 2vw 0.5vw;
+        min-width: 0;
+        width: 98vw;
+        max-width: 98vw;
+        height: auto;
+        margin: 0 0.5cm 0.5cm 0;
+        margin-bottom: 1.2cm !important;
+      }
+      h1 {
+        margin-top: 1.2cm;
+      }
+      #calendarHeader {
+        margin-top: 1.2cm;
+      }
+    }
+
+    @media (max-width: 600px) {
+      #calendarGrid {
+        font-size: 0.7em;
+        padding: 2vw 0.2vw 2vw 0.2vw;
+        min-width: 0;
+        width: 99vw;
+        max-width: 99vw;
+        margin: 0 0.2cm 0.2cm 0;
+        margin-bottom: 0.7cm !important;
+      }
+      #setupPopup {
+        width: 98vw;
+        max-width: 98vw;
+      }
+      h1 {
+        margin-top: 0.7cm;
+      }
+      #calendarHeader {
+        margin-top: 0.7cm;
+      }
+    }
+
+    .dropdown-item:hover {
+      background-color: #f5f5f5 !important;
+    }
+
+    .dropdown-item.selected {
+      background-color: #e0f7ef !important;
+    }
+
+    #foodDropdown {
+      border-radius: 0 0 8px 8px;
+    }
+
+    #foodDropdown .dropdown-item:last-child {
+      border-bottom: none;
+    }
+
+    #dayModal {
+      z-index: 3000 !important;
+      pointer-events: auto !important;
+    }
+    #dayModal > div {
+      z-index: 3001 !important;
+      pointer-events: auto !important;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1><em>NutriLog</em></h1>
+  <div id="calendarHeader" style="margin: 0 auto 8px auto; max-width: 1400px; display: flex; align-items: center; justify-content: center; gap: 12px;"></div>
+  <div id="mainLayout">
+    <div id="setupPopup">
+      <h3 style="margin-top:0; font-size:0.98em;">Setup</h3>
+      <label style="display:block; margin-bottom:3px;">Body weight (kg):<input id="weight" type="number" style="margin-bottom:3px; width:100%; font-size:0.9em; padding:4px;" oninput="updateProteinGoal();saveSetup();" /></label>
+      <label style="display:block; margin-bottom:3px;">BMR (calories):<input id="bmr" type="number" style="margin-bottom:3px; width:100%; font-size:0.9em; padding:4px;" oninput="saveSetup();" /></label>
+      <label style="display:block; margin-bottom:3px;">Protein per day (g/kg):<input id="proteinPerKg" type="number" step="0.01" style="margin-bottom:3px; width:100%; font-size:0.9em; padding:4px;" oninput="updateProteinGoal();saveSetup();" /></label>
+      <div id="proteinGoalDisplay" style="font-weight:600; color:#285b4c; margin: 4px 0 0 0; font-size:0.92em;"></div>
+    </div>
+    <div id="calendarGrid"></div>
+  </div>
+
+  <!-- Modal for day details -->
+  <div id="dayModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:3000; align-items:center; justify-content:center; pointer-events:auto; font-size:0.8em;">
+    <div style="background:white; border-radius:16px; max-width:2600px; width:100vw; padding:24px; box-shadow:0 8px 32px #0002; position:relative; z-index:3001; pointer-events:auto; font-size:inherit;">
+      <button id="closeModalBtn" style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.1em; cursor:pointer;">&times;</button>
+      <h2 id="modalDayTitle" style="margin-top:0; word-break:normal; white-space:nowrap; font-size:1.3em;">Day Details</h2>
+      <div id="modalMeals" style="font-size:inherit;">
+        <h4>Meals & Exercise</h4>
+        <ul id="mealListModal" style="padding-left:18px;"></ul>
+        <div id="chooseActionSection">
+          <button type="button" id="addMealBtn" style="width:100%;margin-bottom:8px;background:#d9534f;color:white;">Add Meal</button>
+          <button type="button" id="addExerciseBtn" style="width:100%;margin-bottom:8px;">Add Exercise</button>
+        </div>
+        <form id="addMealForm" style="display:none;">
+          <div id="step1FoodName" style="margin-bottom:12px;">
+            <div style="position:relative;">
+              <input id="mealDescInput" placeholder="Enter food name" style="margin-bottom:6px; width:100%;" required disabled oninput="showFoodDropdown()" onfocus="showFoodDropdown()" onkeydown="handleFoodInputKeydown()" />
+              <div id="foodDropdown" style="position:absolute; top:100%; left:0; right:0; background:white; border:1px solid #ccc; border-top:none; max-height:200px; overflow-y:auto; z-index:1000; display:none; box-shadow:0 4px 8px rgba(0,0,0,0.1);"></div>
+              <div id="foodLoading" style="position:absolute; top:100%; left:0; right:0; background:white; color:#285b4c; text-align:center; padding:8px; display:none;">Loading foods...</div>
+            </div>
+            <button type="button" id="searchFoodBtn" style="width:100%;margin-bottom:8px;background:#285b4c;">Search Food</button>
+          </div>
+          <div id="step2Amount" style="display:none; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+              <input id="mealAmountInput" type="number" step="0.1" placeholder="Amount" style="flex:1;" required />
+              <span id="unitDisplay" style="font-weight:600; color:#285b4c; min-width:60px; text-align:center;"></span>
+            </div>
+            <div id="foodInfo" style="background:#f0f8f4; padding:8px; border-radius:6px; margin-bottom:8px; font-size:0.9em; display:none;">
+              <div id="foodInfoText"></div>
+            </div>
+            <button type="submit" style="width:100%;margin-bottom:8px;">Add Meal</button>
+            <button type="button" id="backFromMealBtn" style="width:100%;background:#666;">Back</button>
+          </div>
+        </form>
+        <div id="addExerciseForm" style="display:none; margin-top:12px;">
+          <div style="display:flex; gap:12px; justify-content:center;">
+            <button type="button" id="exercise600Btn" style="flex:1; background:#4CAF50; color:white;">600 calories</button>
+            <button type="button" id="exercise300Btn" style="flex:1; background:#2196F3; color:white;">300 calories</button>
+          </div>
+          <button type="button" id="backFromExerciseBtn" style="width:100%;margin-top:10px;background:#666;">Back</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add a modal for Google search and manual nutrition entry -->
+  <div id="nutritionModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.25); z-index:3000; align-items:center; justify-content:center;">
+    <div style="background:white; border-radius:16px; max-width:600px; width:96vw; padding:24px; box-shadow:0 8px 32px #0002; position:relative; display:flex; flex-direction:column; align-items:center;">
+      <button onclick="closeNutritionModal()" style="position:absolute; top:10px; right:10px; background:none; border:none; font-size:1.3em; cursor:pointer;">&times;</button>
+      <h2 style="margin-top:0;">Enter Nutrition Values</h2>
+      <a id="nutritionGoogleLink" href="#" target="_blank" style="color:#285b4c; font-weight:600; font-size:1.1em; margin-bottom:10px; text-decoration:underline;">Open Google Search</a>
+      <iframe id="nutritionIframe" src="" style="width:100%; height:300px; border:1px solid #b2dfc7; border-radius:8px; margin-bottom:12px; display:none;"></iframe>
+      <div style="width:100%; max-width:350px; margin:0 auto;">
+        <label>Calories: <input id="nutritionCaloriesInput" type="number" style="width:100%; margin-bottom:8px;" /></label>
+        <label>Protein (g): <input id="nutritionProteinInput" type="number" style="width:100%; margin-bottom:8px;" /></label>
+        <button id="nutritionSaveBtn" style="width:100%; background:#4CAF50; color:white; font-weight:600; border:none; border-radius:8px; padding:12px; font-size:1.1em; cursor:pointer;">Save Meal</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const setupKey = "diet-setup";
+    const diaryKey = "diet-diary";
+
+    let calendarYear, calendarMonth;
+    let selectedDay = null;
+
+    // Global variable to store the food database
+    let foodDatabase = [];
+    let lastDatabaseFetch = 0;
+    const DATABASE_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+    let selectedFood = null; // Store the selected food from database
+    let dropdownItems = []; // Store filtered dropdown items
+    let selectedDropdownIndex = -1; // Track selected item in dropdown
+
+    function getMonthDays(year, month) {
+      return new Date(year, month + 1, 0).getDate();
+    }
+
+    function renderCalendarHeader() {
+      const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+      let html = `<button onclick='changeMonth(-1)' style='font-size:1.2em;padding:2px 8px;border-radius:6px;border:none;background:#e0f7ef;cursor:pointer;'>&lt;</button>`;
+      html += `<select id='monthSelect' onchange='setMonthYear()'>`;
+      for(let m=0;m<12;m++) html += `<option value='${m}'${m===calendarMonth?" selected":''}>${months[m]}</option>`;
+      html += `</select>`;
+      html += `<select id='yearSelect' onchange='setMonthYear()'>`;
+      for(let y=calendarYear-5;y<=calendarYear+5;y++) html += `<option value='${y}'${y===calendarYear?" selected":''}>${y}</option>`;
+      html += `</select>`;
+      html += `<button onclick='changeMonth(1)' style='font-size:1.2em;padding:2px 8px;border-radius:6px;border:none;background:#e0f7ef;cursor:pointer;'>&gt;</button>`;
+      document.getElementById('calendarHeader').innerHTML = html;
+    }
+
+    function renderCalendar() {
+      if (calendarYear === undefined || calendarMonth === undefined) {
+        const today = new Date();
+        calendarYear = today.getFullYear();
+        calendarMonth = today.getMonth();
+      }
+      renderCalendarHeader();
+      const year = calendarYear;
+      const month = calendarMonth;
+      const daysInMonth = getMonthDays(year, month);
+      const firstDay = new Date(year, month, 1).getDay();
+      const setup = JSON.parse(localStorage.getItem(setupKey) || '{}');
+      const diary = JSON.parse(localStorage.getItem(diaryKey) || '{}');
+      const proteinGoal = setup.weight && setup.proteinPerKg ? setup.weight * setup.proteinPerKg : 0;
+      const today = new Date();
+      let html = '';
+      // Header row
+      const weekDays = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      html += weekDays.map(d => `<div class='calendar-header-cell'>${d}</div>`).join('');
+      // Empty cells before first day
+      for (let i = 0; i < firstDay; i++) html += `<div class='calendar-day-cell'></div>`;
+      // Days
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        const entries = diary[dateStr] || [];
+        let mealCalories = 0;
+        let exerciseCalories = 0;
+        let totalProtein = 0;
+        for (const entry of entries) {
+          if (entry.type === 'exercise') {
+            exerciseCalories += entry.calories || 0;
+          } else {
+            mealCalories += entry.calories || 0;
+            totalProtein += entry.protein || 0;
+          }
+        }
+        const bmr = setup.bmr || 0;
+        const calDeficit = bmr - (mealCalories - exerciseCalories);
+        const protDeficit = totalProtein - proteinGoal;
+        const isToday = (year === today.getFullYear() && month === today.getMonth() && day === today.getDate());
+        const isPast = (new Date(year, month, day) < new Date(today.getFullYear(), today.getMonth(), today.getDate()));
+        html += `<div class='calendar-day-cell${isToday ? " today" : ""}' data-date="${dateStr}" data-day="${day}" data-month="${month}" data-year="${year}">`;
+        html += `<div class='day-number'>${day}</div>`;
+        if (isToday || isPast) {
+          html += `<div class='cal-deficit'>Cal Δ: <span style='color:${calDeficit<0?"#d9534f":"#45a084"}'>${calDeficit}</span></div>`;
+          html += `<div class='prot-deficit'>Prot Δ: <span style='color:${protDeficit<0?"#d9534f":"#45a084"}'>${protDeficit.toFixed(1)}</span></div>`;
+        }
+        html += `</div>`;
+      }
+      // Fill out last week
+      let totalCells = firstDay + daysInMonth;
+      for (let i = totalCells; i % 7 !== 0; i++) html += `<div class='calendar-day-cell'></div>`;
+      document.getElementById('calendarGrid').innerHTML = html;
+    }
+
+    function changeMonth(delta) {
+      calendarMonth += delta;
+      if (calendarMonth < 0) {
+        calendarMonth = 11;
+        calendarYear--;
+      } else if (calendarMonth > 11) {
+        calendarMonth = 0;
+        calendarYear++;
+      }
+      renderCalendar();
+    }
+
+    function setMonthYear() {
+      const m = document.getElementById('monthSelect').value;
+      const y = document.getElementById('yearSelect').value;
+      calendarMonth = +m;
+      calendarYear = +y;
+      renderCalendar();
+    }
+
+    function saveSetup() {
+      const setup = {
+        weight: +document.getElementById("weight").value,
+        bmr: +document.getElementById("bmr").value,
+        proteinPerKg: +document.getElementById("proteinPerKg").value,
+      };
+      localStorage.setItem(setupKey, JSON.stringify(setup));
+      updateProteinGoal();
+      renderCalendar();
+    }
+
+    function loadSetup() {
+      const setup = JSON.parse(localStorage.getItem(setupKey));
+      if (!setup) return;
+      if (setup.weight !== undefined) document.getElementById("weight").value = setup.weight;
+      if (setup.bmr !== undefined) document.getElementById("bmr").value = setup.bmr;
+      if (setup.proteinPerKg !== undefined) document.getElementById("proteinPerKg").value = setup.proteinPerKg;
+      updateProteinGoal();
+    }
+
+    function updateProteinGoal() {
+      const weight = +document.getElementById("weight").value;
+      const proteinPerKg = +document.getElementById("proteinPerKg").value;
+      if (weight && proteinPerKg) {
+        document.getElementById("proteinGoalDisplay").textContent = `Protein goal: ${(weight * proteinPerKg).toFixed(1)} g per day`;
+      } else {
+        document.getElementById("proteinGoalDisplay").textContent = 'Protein goal: -';
+      }
+    }
+
+    function openDayModal(dateStr, day, month, year) {
+      selectedDay = dateStr;
+      document.getElementById('modalDayTitle').textContent = `Meals & Exercises for ${day}/${month+1}/${year}`;
+      renderMealListModal();
+      document.getElementById('dayModal').style.display = 'flex';
+      showChooseAction();
+      // Ensure modal is always interactive
+      setTimeout(function() {
+        var modal = document.getElementById('dayModal');
+        if (modal) {
+          var descendants = modal.getElementsByTagName('*');
+          for (var i = 0; i < descendants.length; i++) {
+            descendants[i].style.setProperty('pointer-events', 'auto', 'important');
+          }
+        }
+      }, 20);
+    }
+
+    function closeDayModal() {
+      document.getElementById('dayModal').style.display = 'none';
+      selectedDay = null;
+      resetFoodForm();
+    }
+
+    function parseAmount(amountStr) {
+      let match = amountStr.match(/([\d.]+)\s*(g|gram|grams|tbsp|cup|piece|pieces)?/i);
+      if (!match) {
+        // If just a number, assume pieces
+        let numMatch = amountStr.match(/([\d.]+)/);
+        if (numMatch) return { quantity: parseFloat(numMatch[1]), unit: 'piece' };
+        return { quantity: 1, unit: 'piece' };
+      }
+      let quantity = parseFloat(match[1]);
+      let unit = (match[2] || '').toLowerCase();
+      if (!unit) unit = 'piece';
+      if (unit === 'gram' || unit === 'grams' || unit === 'g') unit = 'g';
+      if (unit === 'pieces') unit = 'piece';
+      return { quantity, unit };
+    }
+
+    async function fetchFoodDatabase() {
+      const now = Date.now();
+      // Only fetch if cache is expired or database is empty
+      if (foodDatabase.length === 0 || (now - lastDatabaseFetch) > DATABASE_CACHE_DURATION) {
+        try {
+          // Google Sheets CSV export URL
+          const sheetId = '1pGMtd9KXrUC9kaG05_JPbuvtporpwUIxjF0IJ6_Gsaw';
+          const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv&gid=0`;
+          
+          const response = await fetch(csvUrl);
+          const csvText = await response.text();
+          console.log('RAW CSV TEXT:', csvText); // Debug log
+          
+          // Parse CSV
+          const lines = csvText.split('\n');
+          foodDatabase = [];
+          
+          // Skip header rows (rows 1-2) and start from row 3
+          for (let i = 2; i < lines.length; i++) {
+            const line = lines[i].trim();
+            if (!line) continue;
+            
+            // Split by comma, but handle quoted values
+            const columns = line.split(',').map(col => col.trim().replace(/^"|"$/g, ''));
+            
+            // Adjust for leading comma in each row
+            if (columns.length >= 6 && columns[1] && columns[2] && columns[3]) {
+              foodDatabase.push({
+                name: columns[1].toLowerCase().trim(),
+                amount: parseFloat(columns[2]) || 0,
+                unit: columns[3].toLowerCase().trim(),
+                calories: parseFloat(columns[4]) || 0,
+                protein: parseFloat(columns[5]) || 0
+              });
+            }
+          }
+          
+          lastDatabaseFetch = now;
+          console.log(`Loaded ${foodDatabase.length} foods from database`);
+        } catch (error) {
+          console.error('Error fetching food database:', error);
+          // Keep existing database if fetch fails
+        }
+      }
+      return foodDatabase;
+    }
+
+    async function fetchNutritionInfo(description, amountStr) {
+      try {
+        // Ensure database is loaded
+        await fetchFoodDatabase();
+        
+        const userFood = description.toLowerCase().trim();
+        const userAmount = parseAmount(amountStr);
+        
+        // Find exact match in database
+        const match = foodDatabase.find(food => 
+          food.name === userFood && food.unit === userAmount.unit
+        );
+        
+        if (match) {
+          // Calculate proportional values
+          const ratio = userAmount.quantity / match.amount;
+          const calories = Math.round(match.calories * ratio);
+          const protein = Math.round((match.protein * ratio) * 10) / 10; // Round to 1 decimal
+          
+          return {
+            calories,
+            protein,
+            success: true,
+            matchedFood: match.name,
+            originalAmount: match.amount,
+            originalUnit: match.unit
+          };
+        } else {
+          // Try to find partial matches for better user experience
+          const partialMatches = foodDatabase.filter(food => 
+            food.name.includes(userFood) || userFood.includes(food.name)
+          );
+          
+          if (partialMatches.length > 0) {
+            return {
+              calories: 0,
+              protein: 0,
+              success: false,
+              error: `No exact match found. Similar foods: ${partialMatches.slice(0, 3).map(f => f.name).join(', ')}`,
+              suggestions: partialMatches.slice(0, 3)
+            };
+          }
+          
+          return {
+            calories: 0,
+            protein: 0,
+            success: false,
+            error: 'Food not found in database. Please enter values manually.'
+          };
+        }
+      } catch (error) {
+        console.error('Error in fetchNutritionInfo:', error);
+        return {
+          calories: 0,
+          protein: 0,
+          success: false,
+          error: 'Database error. Please enter values manually.'
+        };
+      }
+    }
+
+    let nutritionModalCallback = null;
+    function openNutritionModal(googleUrl, onSave) {
+      document.getElementById('nutritionModal').style.display = 'flex';
+      
+      if (googleUrl) {
+        // Show Google search option
+        const link = document.getElementById('nutritionGoogleLink');
+        link.href = googleUrl;
+        link.style.display = 'block';
+        link.onclick = (e) => {
+          e.preventDefault();
+          document.getElementById('nutritionIframe').src = googleUrl;
+          document.getElementById('nutritionIframe').style.display = 'block';
+        };
+      } else {
+        // Hide Google search option for manual entry only
+        document.getElementById('nutritionGoogleLink').style.display = 'none';
+        document.getElementById('nutritionIframe').style.display = 'none';
+      }
+      
+      document.getElementById('nutritionCaloriesInput').value = '';
+      document.getElementById('nutritionProteinInput').value = '';
+      nutritionModalCallback = onSave;
+    }
+    function closeNutritionModal() {
+      document.getElementById('nutritionModal').style.display = 'none';
+      document.getElementById('nutritionIframe').src = '';
+      document.getElementById('nutritionIframe').style.display = 'none';
+      nutritionModalCallback = null;
+    }
+    document.getElementById('nutritionSaveBtn').onclick = function() {
+      const calories = document.getElementById('nutritionCaloriesInput').value;
+      const protein = document.getElementById('nutritionProteinInput').value;
+      if (!calories || !protein) {
+        alert('Please enter both calories and protein values.');
+        return;
+      }
+      if (nutritionModalCallback) nutritionModalCallback(+calories, +protein);
+      closeNutritionModal();
+    };
+
+    async function addMealToDay(e) {
+      e.preventDefault();
+      
+      if (!selectedFood) {
+        alert('Please search for a food first');
+        return;
+      }
+      
+      const amount = document.getElementById('mealAmountInput').value;
+      if (!amount || amount <= 0) {
+        alert('Please enter a valid amount');
+        return;
+      }
+      
+      const userAmount = parseFloat(amount);
+      
+      // Calculate proportional values
+      const ratio = userAmount / selectedFood.amount;
+      const calories = Math.round(selectedFood.calories * ratio);
+      const protein = Math.round((selectedFood.protein * ratio) * 10) / 10; // Round to 1 decimal
+      
+      // Add meal to diary
+      const diary = JSON.parse(localStorage.getItem(diaryKey) || '{}');
+      if (!diary[selectedDay]) diary[selectedDay] = [];
+      diary[selectedDay].push({
+        food: selectedFood.name,
+        amount: `${userAmount} ${selectedFood.unit}`,
+        calories,
+        protein,
+        perUnitCalories: '',
+        perUnitProtein: '',
+        perUnitLabel: ''
+      });
+      localStorage.setItem(diaryKey, JSON.stringify(diary));
+      renderMealListModal();
+      resetFoodForm();
+      renderCalendar();
+      
+      // Show success message
+      const message = `Added ${selectedFood.name}: ${calories} calories, ${protein}g protein`;
+      showTemporaryMessage(message, 'success');
+    }
+
+    function showTemporaryMessage(message, type = 'info') {
+      // Create temporary message element
+      const messageDiv = document.createElement('div');
+      messageDiv.textContent = message;
+      messageDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: ${type === 'success' ? '#4CAF50' : '#2196F3'};
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        z-index: 5000;
+        font-weight: 600;
+        max-width: 300px;
+        word-wrap: break-word;
+      `;
+      
+      document.body.appendChild(messageDiv);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+        if (messageDiv.parentNode) {
+          messageDiv.parentNode.removeChild(messageDiv);
+        }
+      }, 3000);
+    }
+
+    function renderMealListModal() {
+      const diary = JSON.parse(localStorage.getItem(diaryKey) || '{}');
+      const meals = diary[selectedDay] || [];
+      const mealList = document.getElementById('mealListModal');
+      mealList.innerHTML = '';
+      meals.forEach((meal, idx) => {
+        const li = document.createElement('li');
+        li.style.display = 'flex';
+        li.style.alignItems = 'center';
+        li.style.justifyContent = 'space-between';
+        li.style.marginBottom = '2px';
+        li.style.padding = '2px 8px';
+        li.style.borderRadius = '6px';
+        li.style.fontSize = '1em';
+        li.style.background = '#fff';
+        li.style.listStyle = 'none';
+        li.style.gap = '10px';
+        li.style.borderWidth = '3px';
+        li.style.borderStyle = 'solid';
+        li.style.overflow = 'visible';
+        li.style.boxSizing = 'border-box';
+        li.style.whiteSpace = 'nowrap';
+        li.style.overflowX = 'auto';
+        
+        let content = '';
+        if (meal.type === 'exercise') {
+          li.style.borderColor = '#4CAF50';
+          content = `<span style='font-weight:600;color:#388e3c;white-space:nowrap;'>Exercise +${meal.calories} kcal</span>`;
+        } else {
+          li.style.borderColor = '#d9534f';
+          let unitLabel = '';
+          let perUnitCalories = '';
+          let perUnitProtein = '';
+          if (foodDatabase && meal.food) {
+            const dbFood = foodDatabase.find(f => f.name === meal.food);
+            if (dbFood) {
+              unitLabel = `${dbFood.amount} ${dbFood.unit}`;
+              perUnitCalories = dbFood.calories;
+              perUnitProtein = dbFood.protein;
+            }
+          }
+          let userAmount = meal.amount || '';
+          content = `<span style='font-weight:600;'>${meal.food || meal.desc || ''}</span> <span style='color:#888;'>( ${unitLabel}, ${perUnitCalories} kcal, ${perUnitProtein}g protein )</span> <span style='color:#222;font-weight:600;'>${userAmount}</span> <span style='color:#d9534f;font-weight:600;'>${meal.calories || 0} kcal</span> <span style='color:#007bff;font-weight:600;'>${meal.protein || 0}g protein</span>`;
+        }
+        
+        // Create content div
+        const contentDiv = document.createElement('div');
+        contentDiv.style.cssText = 'display:flex;align-items:center;gap:8px;flex:1;flex-wrap:nowrap;white-space:nowrap;font-size:inherit;';
+        contentDiv.innerHTML = content;
+        
+        // Create buttons div
+        const buttonsDiv = document.createElement('div');
+        buttonsDiv.style.cssText = 'display:flex;gap:4px;flex-shrink:0;white-space:nowrap;font-size:inherit;align-items:center;';
+        
+        // Create Edit button
+        const editBtn = document.createElement('button');
+        editBtn.textContent = 'Edit';
+        editBtn.style.fontSize = '0.85em';
+        editBtn.style.padding = '2px 8px';
+        editBtn.style.height = '22px';
+        editBtn.addEventListener('click', () => {
+          console.log('Edit button clicked for index:', idx);
+          editMeal(idx);
+        });
+        
+        // Create Delete button
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.style.fontSize = '0.85em';
+        deleteBtn.style.padding = '2px 8px';
+        deleteBtn.style.height = '22px';
+        deleteBtn.addEventListener('click', () => {
+          console.log('Delete button clicked for index:', idx);
+          deleteMeal(idx);
+        });
+        
+        // Append buttons to buttons div
+        buttonsDiv.appendChild(editBtn);
+        buttonsDiv.appendChild(deleteBtn);
+        
+        // Append content and buttons to list item
+        li.appendChild(contentDiv);
+        li.appendChild(buttonsDiv);
+        
+        mealList.appendChild(li);
+      });
+    }
+
+    function deleteMeal(idx) {
+      console.log('deleteMeal called with index:', idx);
+      const diary = JSON.parse(localStorage.getItem(diaryKey) || '{}');
+      if (!diary[selectedDay]) {
+        console.log('No diary for selectedDay:', selectedDay);
+        return;
+      }
+      diary[selectedDay].splice(idx, 1);
+      localStorage.setItem(diaryKey, JSON.stringify(diary));
+      renderMealListModal();
+      renderCalendar();
+    }
+
+    function editMeal(idx) {
+      console.log('editMeal called with index:', idx);
+      const diary = JSON.parse(localStorage.getItem(diaryKey) || '{}');
+      if (!diary[selectedDay]) {
+        console.log('No diary for selectedDay:', selectedDay);
+        return;
+      }
+      const meal = diary[selectedDay][idx];
+      console.log('Editing meal:', meal);
+      document.getElementById('mealDescInput').value = meal.food || meal.desc || '';
+      document.getElementById('mealAmountInput').value = meal.amount || '';
+      // Remove the meal being edited
+      diary[selectedDay].splice(idx, 1);
+      localStorage.setItem(diaryKey, JSON.stringify(diary));
+      renderMealListModal();
+      renderCalendar();
+    }
+
+    async function searchFood() {
+      const foodName = document.getElementById('mealDescInput').value.trim().toLowerCase();
+      if (!foodName) {
+        alert('Please enter a food name');
+        return;
+      }
+
+      // Ensure database is loaded
+      await fetchFoodDatabase();
+      
+      // Find exact match in database
+      const match = foodDatabase.find(food => food.name === foodName);
+      
+      if (match) {
+        selectedFood = match;
+        showAmountStep(match);
+      } else {
+        // No exact match found - show suggestions from dropdown
+        showFoodDropdown();
+        if (dropdownItems.length > 0) {
+          alert(`No exact match found. Please select from the dropdown list above.`);
+        } else {
+          alert('Food not found in database. Please enter values manually.');
+          // Fallback to manual entry
+          openNutritionModal(null, (calories, protein) => {
+            const diary = JSON.parse(localStorage.getItem(diaryKey) || '{}');
+            if (!diary[selectedDay]) diary[selectedDay] = [];
+            diary[selectedDay].push({
+              food: foodName,
+              amount: '1 piece', // Default amount
+              calories,
+              protein,
+              perUnitCalories: '',
+              perUnitProtein: '',
+              perUnitLabel: ''
+            });
+            localStorage.setItem(diaryKey, JSON.stringify(diary));
+            renderMealListModal();
+            resetFoodForm();
+            renderCalendar();
+          });
+        }
+      }
+    }
+
+    function showAmountStep(food) {
+      // Hide step 1, show step 2
+      document.getElementById('step1FoodName').style.display = 'none';
+      document.getElementById('step2Amount').style.display = 'block';
+      
+      // Set the unit display
+      document.getElementById('unitDisplay').textContent = food.unit;
+      
+      // Show food info
+      document.getElementById('foodInfo').style.display = 'block';
+      document.getElementById('foodInfoText').innerHTML = `
+        <strong>${food.name}</strong><br>
+        ${food.calories} calories, ${food.protein}g protein per ${food.amount} ${food.unit}
+      `;
+      
+      // Focus on amount input
+      document.getElementById('mealAmountInput').focus();
+    }
+
+    function resetFoodForm() {
+      selectedFood = null;
+      document.getElementById('mealDescInput').value = '';
+      document.getElementById('mealAmountInput').value = '';
+      document.getElementById('step1FoodName').style.display = 'block';
+      document.getElementById('step2Amount').style.display = 'none';
+      document.getElementById('foodInfo').style.display = 'none';
+      document.getElementById('foodDropdown').style.display = 'none';
+      selectedDropdownIndex = -1;
+      document.getElementById('mealDescInput').focus();
+    }
+
+    function showFoodDropdown() {
+      const input = document.getElementById('mealDescInput');
+      const dropdown = document.getElementById('foodDropdown');
+      const searchTerm = input.value.trim().toLowerCase();
+      
+      if (searchTerm.length < 1) {
+        dropdown.style.display = 'none';
+        return;
+      }
+      
+      // Filter foods that match the search term
+      dropdownItems = foodDatabase.filter(food => 
+        food.name.toLowerCase().includes(searchTerm)
+      ).slice(0, 10); // Limit to 10 results
+      
+      if (dropdownItems.length === 0) {
+        dropdown.style.display = 'none';
+        return;
+      }
+      
+      // Build dropdown HTML
+      dropdown.innerHTML = '';
+      dropdownItems.forEach((food, index) => {
+        const item = document.createElement('div');
+        item.className = `dropdown-item${index === selectedDropdownIndex ? ' selected' : ''}`;
+        item.style.cssText = `padding:8px 12px; cursor:pointer; border-bottom:1px solid #eee; ${index === selectedDropdownIndex ? 'background:#e0f7ef;' : ''}`;
+        
+        item.innerHTML = `
+          <div style="font-weight:600;">${food.name}</div>
+          <div style="font-size:0.85em; color:#666;">${food.calories} cal, ${food.protein}g protein per ${food.amount} ${food.unit}</div>
+        `;
+        
+        item.addEventListener('click', () => selectFoodFromDropdown(index));
+        item.addEventListener('mouseover', () => highlightDropdownItem(index));
+        
+        dropdown.appendChild(item);
+      });
+      dropdown.style.display = 'block';
+      selectedDropdownIndex = -1;
+    }
+
+    function selectFoodFromDropdown(index) {
+      if (index >= 0 && index < dropdownItems.length) {
+        const food = dropdownItems[index];
+        document.getElementById('mealDescInput').value = food.name;
+        document.getElementById('foodDropdown').style.display = 'none';
+        selectedFood = food;
+        showAmountStep(food);
+      }
+    }
+
+    function highlightDropdownItem(index) {
+      selectedDropdownIndex = index;
+      const items = document.querySelectorAll('.dropdown-item');
+      items.forEach((item, i) => {
+        if (i === index) {
+          item.style.background = '#e0f7ef';
+          item.classList.add('selected');
+        } else {
+          item.style.background = 'white';
+          item.classList.remove('selected');
+        }
+      });
+    }
+
+    function handleFoodInputKeydown(event) {
+      const dropdown = document.getElementById('foodDropdown');
+      const items = document.querySelectorAll('.dropdown-item');
+      
+      switch(event.key) {
+        case 'ArrowDown':
+          event.preventDefault();
+          if (dropdown.style.display === 'block') {
+            selectedDropdownIndex = Math.min(selectedDropdownIndex + 1, dropdownItems.length - 1);
+            highlightDropdownItem(selectedDropdownIndex);
+          }
+          break;
+          
+        case 'ArrowUp':
+          event.preventDefault();
+          if (dropdown.style.display === 'block') {
+            selectedDropdownIndex = Math.max(selectedDropdownIndex - 1, -1);
+            if (selectedDropdownIndex >= 0) {
+              highlightDropdownItem(selectedDropdownIndex);
+            } else {
+              // Remove highlighting when going above first item
+              items.forEach(item => {
+                item.style.background = 'white';
+                item.classList.remove('selected');
+              });
+            }
+          }
+          break;
+          
+        case 'Enter':
+          event.preventDefault();
+          if (selectedDropdownIndex >= 0 && selectedDropdownIndex < dropdownItems.length) {
+            selectFoodFromDropdown(selectedDropdownIndex);
+          } else {
+            // If no dropdown item is selected, try to find exact match
+            searchFood();
+          }
+          break;
+          
+        case 'Escape':
+          dropdown.style.display = 'none';
+          selectedDropdownIndex = -1;
+          break;
+      }
+    }
+
+    function showChooseAction() {
+      console.log('showChooseAction called');
+      document.getElementById('chooseActionSection').style.display = 'block';
+      document.getElementById('addMealForm').style.display = 'none';
+      document.getElementById('addExerciseForm').style.display = 'none';
+      resetFoodForm();
+    }
+    function showAddMealForm() {
+      console.log('showAddMealForm called');
+      document.getElementById('chooseActionSection').style.display = 'none';
+      document.getElementById('addMealForm').style.display = 'block';
+      document.getElementById('addExerciseForm').style.display = 'none';
+      setTimeout(() => {
+        document.getElementById('mealDescInput').focus();
+      }, 100);
+    }
+    function showAddExerciseForm() {
+      console.log('showAddExerciseForm called');
+      document.getElementById('chooseActionSection').style.display = 'none';
+      document.getElementById('addMealForm').style.display = 'none';
+      document.getElementById('addExerciseForm').style.display = 'block';
+    }
+    function addExerciseToDay(calories) {
+      const diary = JSON.parse(localStorage.getItem(diaryKey) || '{}');
+      if (!diary[selectedDay]) diary[selectedDay] = [];
+      diary[selectedDay].push({
+        type: 'exercise',
+        calories: calories,
+        protein: 0
+      });
+      localStorage.setItem(diaryKey, JSON.stringify(diary));
+      renderMealListModal();
+      showChooseAction();
+      renderCalendar();
+      showTemporaryMessage(`Added exercise: +${calories} calories`, 'success');
+    }
+
+    // Initialize everything when DOM is ready
+    document.addEventListener('DOMContentLoaded', async function() {
+      console.log('DOMContentLoaded event fired');
+      
+      // Initialize calendar
+      let today = new Date();
+      calendarYear = today.getFullYear();
+      calendarMonth = today.getMonth();
+      loadSetup();
+      renderCalendar();
+      
+      // Preload the food database
+      try {
+        const foodLoading = document.getElementById('foodLoading');
+        if (foodLoading) {
+          foodLoading.style.display = 'block';
+        }
+        await fetchFoodDatabase();
+        if (foodLoading) {
+          foodLoading.style.display = 'none';
+        }
+        const mealDescInput = document.getElementById('mealDescInput');
+        if (mealDescInput) {
+          mealDescInput.disabled = false;
+        }
+        console.log('Food database loaded successfully:', foodDatabase);
+      } catch (error) {
+        const foodLoading = document.getElementById('foodLoading');
+        if (foodLoading) {
+          foodLoading.textContent = 'Failed to load foods';
+        }
+        console.error('Failed to load food database:', error);
+      }
+
+      // Close modal when clicking outside
+      document.addEventListener('mousedown', function(event) {
+        const modal = document.getElementById('dayModal');
+        if (!modal || modal.style.display !== 'flex') return;
+        
+        // Check if the click is on the modal backdrop (the outer div)
+        if (event.target === modal) {
+          closeDayModal();
+        }
+      });
+
+      // Enlarge the modal window
+      const modal = document.querySelector('#dayModal > div');
+      if (modal) {
+        modal.style.maxWidth = '600px';
+        modal.style.width = '98vw';
+      }
+
+      // Change Add Meal button to red
+      const addMealBtn = document.querySelector('button[onclick*="showAddMealForm"]');
+      if (addMealBtn) {
+        addMealBtn.style.background = '#d9534f';
+        addMealBtn.style.color = 'white';
+      }
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', function(event) {
+        const dropdown = document.getElementById('foodDropdown');
+        const input = document.getElementById('mealDescInput');
+        if (!input.contains(event.target) && !dropdown.contains(event.target)) {
+          dropdown.style.display = 'none';
+          selectedDropdownIndex = -1;
+        }
+      });
+
+      // Add event delegation for calendar day clicks
+      document.getElementById('calendarGrid').addEventListener('click', function(event) {
+        console.log('Calendar grid clicked:', event.target);
+        const dayCell = event.target.closest('.calendar-day-cell');
+        if (dayCell) {
+          console.log('Day cell found:', dayCell);
+          const dateStr = dayCell.dataset.date;
+          const day = parseInt(dayCell.dataset.day);
+          const month = parseInt(dayCell.dataset.month);
+          const year = parseInt(dayCell.dataset.year);
+          console.log('Opening modal for:', dateStr, day, month, year);
+          openDayModal(dateStr, day, month, year);
+        }
+      });
+
+      // Add direct event listeners for modal buttons
+      console.log('Setting up modal button event listeners...');
+      
+      const closeModalBtn = document.getElementById('closeModalBtn');
+      if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', function() {
+          console.log('Close modal button clicked');
+          closeDayModal();
+        });
+        console.log('Close modal button listener added');
+      } else {
+        console.error('Close modal button not found!');
+      }
+
+      const mealBtn = document.getElementById('addMealBtn');
+      if (mealBtn) {
+        mealBtn.addEventListener('click', function() {
+          console.log('Add Meal button clicked');
+          showAddMealForm();
+        });
+        console.log('Add Meal button listener added');
+      } else {
+        console.error('Add Meal button not found!');
+      }
+
+      const exerciseBtn = document.getElementById('addExerciseBtn');
+      if (exerciseBtn) {
+        exerciseBtn.addEventListener('click', function() {
+          console.log('Add Exercise button clicked');
+          showAddExerciseForm();
+        });
+        console.log('Add Exercise button listener added');
+      } else {
+        console.error('Add Exercise button not found!');
+      }
+
+      const searchBtn = document.getElementById('searchFoodBtn');
+      if (searchBtn) {
+        searchBtn.addEventListener('click', function() {
+          console.log('Search Food button clicked');
+          searchFood();
+        });
+        console.log('Search Food button listener added');
+      } else {
+        console.error('Search Food button not found!');
+      }
+
+      const backMealBtn = document.getElementById('backFromMealBtn');
+      if (backMealBtn) {
+        backMealBtn.addEventListener('click', function() {
+          console.log('Back from meal button clicked');
+          resetFoodForm();
+          showChooseAction();
+        });
+        console.log('Back from meal button listener added');
+      } else {
+        console.error('Back from meal button not found!');
+      }
+
+      const backExerciseBtn = document.getElementById('backFromExerciseBtn');
+      if (backExerciseBtn) {
+        backExerciseBtn.addEventListener('click', function() {
+          console.log('Back from exercise button clicked');
+          showChooseAction();
+        });
+        console.log('Back from exercise button listener added');
+      } else {
+        console.error('Back from exercise button not found!');
+      }
+
+      const exercise600Btn = document.getElementById('exercise600Btn');
+      if (exercise600Btn) {
+        exercise600Btn.addEventListener('click', function() {
+          console.log('600 calories exercise button clicked');
+          addExerciseToDay(600);
+        });
+        console.log('600 calories exercise button listener added');
+      } else {
+        console.error('600 calories exercise button not found!');
+      }
+
+      const exercise300Btn = document.getElementById('exercise300Btn');
+      if (exercise300Btn) {
+        exercise300Btn.addEventListener('click', function() {
+          console.log('300 calories exercise button clicked');
+          addExerciseToDay(300);
+        });
+        console.log('300 calories exercise button listener added');
+      } else {
+        console.error('300 calories exercise button not found!');
+      }
+
+      // Add form submission handler
+      const mealForm = document.getElementById('addMealForm');
+      if (mealForm) {
+        mealForm.addEventListener('submit', function(event) {
+          console.log('Add meal form submitted');
+          event.preventDefault();
+          addMealToDay(event);
+        });
+        console.log('Meal form submission listener added');
+      } else {
+        console.error('Meal form not found!');
+      }
+    });
+  </script>
+</body>
+</html>
